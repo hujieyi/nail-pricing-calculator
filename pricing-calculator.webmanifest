@@ -1,0 +1,18 @@
+{
+  "name": "美甲計價明細",
+  "short_name": "美甲計價",
+  "description": "美甲收費明細計算與複製工具",
+  "start_url": "./pricing-calculator.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f4ef",
+  "theme_color": "#b46d2f",
+  "icons": [
+    {
+      "src": "./pricing-calculator-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

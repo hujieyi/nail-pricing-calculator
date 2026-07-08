@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#b46d2f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="美甲計價">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>美甲計價明細</title>
+  <link rel="manifest" href="./pricing-calculator.webmanifest">
+  <link rel="icon" href="./pricing-calculator-icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --surface: #fffdf9;
+      --surface-strong: #ffffff;
+      --text: #2f2d29;
+      --muted: #76706a;
+      --line: #ddd6cc;
+      --brand: #b46d2f;
+      --brand-dark: #8b4b1c;
+      --accent: #356f67;
+      --soft: #efe5d6;
+      --danger: #9a3f37;
+      --shadow: 0 18px 45px rgba(72, 55, 36, 0.14);
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(135deg, rgba(255, 253, 249, 0.88), rgba(247, 244, 239, 0.94)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath d='M18 78c18-30 48-48 84-52' fill='none' stroke='%23d6b98d' stroke-opacity='.26' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M12 92c27-12 54-14 82-4' fill='none' stroke='%23739c90' stroke-opacity='.20' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='31' cy='33' r='5' fill='%23b46d2f' fill-opacity='.20'/%3E%3Ccircle cx='86' cy='72' r='4' fill='%238b4b1c' fill-opacity='.18'/%3E%3C/svg%3E");
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      color: var(--text);
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(72, 55, 36, 0.06);
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.65fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 253, 249, 0.92);
+      border: 1px solid rgba(221, 214, 204, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .items {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface-strong);
+      border: 1px solid rgba(221, 214, 204, 0.8);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .item.compact {
+      grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1fr);
+    }
+
+    .item.price-only {
+      grid-template-columns: 92px minmax(0, 1fr);
+    }
+
+    .item-name {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .item-title {
+      font-weight: 700;
+      word-break: keep-all;
+    }
+
+    .compact-label {
+      font-size: 17px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .compact-label small {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .item-price {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .price-only .item-price {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .stepper {
+      display: grid;
+      grid-template-columns: 38px 52px 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .stepper button {
+      border: 0;
+      background: #fff;
+      color: var(--brand-dark);
+      cursor: pointer;
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .stepper button:hover {
+      background: var(--soft);
+    }
+
+    .stepper input {
+      width: 100%;
+      border: 0;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: center;
+      color: var(--text);
+      background: #fff;
+      font-weight: 700;
+      padding: 0;
+      min-width: 0;
+    }
+
+    .choice-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inline-choice-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 8px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface-strong);
+      border: 1px solid rgba(221, 214, 204, 0.8);
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 56px;
+    }
+
+    .choice.compact-choice {
+      min-height: 50px;
+      padding: 10px;
+    }
+
+    .custom-item {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      background: var(--surface-strong);
+      border: 1px solid rgba(221, 214, 204, 0.8);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .custom-label {
+      font-size: 17px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .custom-input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      text-align: right;
+      font-weight: 800;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .choice input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--brand);
+      flex: 0 0 auto;
+    }
+
+    .choice-text {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .choice-text strong {
+      white-space: nowrap;
+    }
+
+    .textarea,
+    .summary textarea {
+      width: 100%;
+      min-height: 88px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.5;
+    }
+
+    .summary {
+      position: sticky;
+      top: 18px;
+    }
+
+    .total {
+      padding: 20px;
+      background: var(--brand-dark);
+      color: #fff;
+    }
+
+    .total-label {
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    .total-value {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.05;
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    .summary-body {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .line-items {
+      display: grid;
+      gap: 8px;
+      min-height: 42px;
+    }
+
+    .line-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(221, 214, 204, 0.8);
+      color: var(--text);
+    }
+
+    .line-item span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 8px 0;
+    }
+
+    .toast {
+      min-height: 22px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .footer-note {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .mobile-dock {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        width: min(100% - 22px, 680px);
+        padding-top: 18px;
+        padding-bottom: 104px;
+      }
+
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        justify-content: stretch;
+      }
+
+      .actions .button {
+        min-width: 0;
+        width: 100%;
+      }
+
+      #copyButton {
+        display: none;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        position: static;
+      }
+
+      .mobile-dock {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 128px;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+        background: rgba(255, 253, 249, 0.96);
+        border-top: 1px solid var(--line);
+        box-shadow: 0 -12px 28px rgba(72, 55, 36, 0.16);
+        backdrop-filter: blur(12px);
+      }
+
+      .dock-label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.2;
+      }
+
+      .dock-total {
+        display: block;
+        color: var(--brand-dark);
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
+      .mobile-dock .button {
+        min-height: 50px;
+        padding: 0 18px;
+        min-width: 0;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .choice-row,
+      .inline-choice-row,
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .item.compact {
+        grid-template-columns: 112px minmax(0, 1fr);
+      }
+
+      .item.price-only {
+        grid-template-columns: 74px minmax(0, 1fr);
+      }
+
+      .item-name {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .stepper {
+        grid-template-columns: 48px 1fr 48px;
+        width: 100%;
+      }
+
+      .hint {
+        white-space: normal;
+        text-align: right;
+      }
+
+      .total-value {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div>
+        <h1>美甲計價明細</h1>
+        <p class="subtitle">點選項目與數量，自動加總，產生可傳給客人的收費明細。</p>
+      </div>
+      <div class="actions">
+        <button class="button" id="resetButton" type="button">清空</button>
+        <button class="button primary" id="copyButton" type="button">複製明細</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel" aria-label="計價項目">
+        <section class="section">
+          <div class="choice-row" id="baseItems"></div>
+        </section>
+
+        <section class="section">
+          <div class="items" id="addonItems"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2>彩繪/造型</h2>
+            <span class="hint">依難度級距</span>
+          </div>
+          <div class="items" id="artItems"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2>排鑽/貼鑽</h2>
+            <span class="hint">依單顆 / 組合價格</span>
+          </div>
+          <div class="items" id="rhinestoneItems"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2>延甲 / 補甲</h2>
+            <span class="hint">用指數</span>
+          </div>
+          <div class="items" id="extensionItems"></div>
+        </section>
+
+        <section class="section">
+          <div class="items" id="careRemovalItems"></div>
+          <div class="custom-item">
+            <span class="custom-label">其他</span>
+            <input class="custom-input" id="customAmount" inputmode="numeric" pattern="[0-9]*" placeholder="$0" aria-label="其他金額">
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h2>跟客人講的話</h2>
+          </div>
+          <textarea class="textarea" id="nailNote" placeholder="例如：謝謝你今天來，回家記得擦指緣油喔～"></textarea>
+        </section>
+      </div>
+
+      <aside class="panel summary" aria-label="收費明細">
+        <div class="total">
+          <div class="total-label">合計</div>
+          <div class="total-value" id="totalValue">$0</div>
+        </div>
+        <div class="summary-body">
+          <div>
+            <div class="section-header">
+              <h2>明細</h2>
+            </div>
+            <div class="line-items" id="lineItems"></div>
+          </div>
+          <div>
+            <div class="section-header">
+              <h2>給客人的文字</h2>
+            </div>
+            <textarea id="messageText" readonly></textarea>
+          </div>
+          <button class="button primary" id="copyButtonBottom" type="button">複製明細</button>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div>
+      </aside>
+    </div>
+
+    <p class="footer-note">第一版先做本機計算與複製文字，不會上傳資料，也不會連到 Notion。</p>
+  </main>
+
+  <div class="mobile-dock" aria-label="手機快速操作列">
+    <div>
+      <span class="dock-label">合計</span>
+      <span class="dock-total" id="dockTotalValue">$0</span>
+    </div>
+    <button class="button primary" id="copyButtonDock" type="button">複製明細</button>
+  </div>
+
+  <script>
+    const baseItems = [
+      { id: "clear-builder", name: "透明建構", price: 800 },
+      { id: "base-color", name: "底色", price: 1000 },
+    ];
+
+    const addonItems = [
+      { id: "chrome", name: "鏡面", price: 50 },
+      { id: "cat-eye", name: "貓眼", price: 50 },
+    ];
+
+    const artItems = [30, 50, 80, 120, 150].map((price) => ({
+      id: `art-${price}`,
+      name: "彩繪/造型",
+      price,
+    }));
+
+    const rhinestoneItems = [100, 150, 200, 250, 350].map((price) => ({
+      id: `rhinestone-${price}`,
+      name: "排鑽/貼鑽",
+      price,
+    }));
+
+    const extensionItems = [
+      { id: "extension-100", name: "延甲", price: 100 },
+      { id: "extension-120", name: "延甲", price: 120 },
+      { id: "repair", name: "補甲", price: 50 },
+    ];
+
+    const careBaseItems = [
+      { id: "hand-basic-care", name: "手基保", price: 500 },
+      { id: "foot-basic-care", name: "足基保", price: 400 },
+    ];
+
+    const careRemovalItems = [
+      { id: "other-removal-continue", name: "他店卸續作", price: 200 },
+      { id: "removal-no-continue", name: "純卸不續作", price: 400 },
+      { id: "other-removal-no-continue", name: "他店卸不續作", price: 500 },
+      { id: "addon-heel-care", name: "加購-去後跟", price: 900 },
+      { id: "addon-foot-deep-1400", name: "加購-足深層", price: 1400 },
+      { id: "addon-foot-deep-1800", name: "加購-足深層", price: 1800 },
+    ];
+
+    const state = {
+      base: {},
+      selected: {},
+      quantity: {},
+      customAmount: 0,
+      note: "",
+    };
+
+    const formatMoney = (amount) => `$${amount.toLocaleString("zh-Hant-TW")}`;
+
+    function createBaseChoice(item) {
+      const label = document.createElement("label");
+      label.className = "choice";
+      label.innerHTML = `
+        <input type="checkbox" data-base-id="${item.id}">
+        <span class="choice-text">
+          <strong>${item.name}</strong>
+          <span class="item-price">${formatMoney(item.price)}</span>
+        </span>
+      `;
+      return label;
+    }
+
+    function createCheckboxItem(item, options = {}) {
+      const label = document.createElement("label");
+      label.className = options.compact ? "choice compact-choice" : "choice";
+      label.innerHTML = `
+        <input type="checkbox" data-checkbox-id="${item.id}">
+        <span class="choice-text">
+          <strong>${item.name}</strong>
+          <span class="item-price">${formatMoney(item.price)}</span>
+        </span>
+      `;
+      return label;
+    }
+
+    function createStepperItem(item, options = {}) {
+      const row = document.createElement("div");
+      row.className = options.priceOnly ? "item price-only" : options.compact ? "item compact" : "item";
+      const nameMarkup = options.priceOnly
+        ? `<span class="item-price">單價 ${formatMoney(item.price)}</span>`
+        : options.compact
+          ? `<span class="compact-label">${item.name}<small>${formatMoney(item.price)}</small></span>`
+        : `<span class="item-title">${item.name}</span><span class="item-price">單價 ${formatMoney(item.price)}</span>`;
+      row.innerHTML = `
+        <div class="item-name">
+          ${nameMarkup}
+        </div>
+        <div class="stepper" aria-label="${item.name} 數量">
+          <button type="button" data-step="-1" data-item-id="${item.id}" aria-label="${item.name} 減少">-</button>
+          <input inputmode="numeric" pattern="[0-9]*" value="0" data-quantity-id="${item.id}" aria-label="${item.name} 數量">
+          <button type="button" data-step="1" data-item-id="${item.id}" aria-label="${item.name} 增加">+</button>
+        </div>
+      `;
+      return row;
+    }
+
+    function renderControls() {
+      document.getElementById("baseItems").replaceChildren(...baseItems.map(createBaseChoice));
+      document.getElementById("addonItems").replaceChildren(...addonItems.map((item) => createStepperItem(item, { compact: true })));
+      document.getElementById("artItems").replaceChildren(...artItems.map((item) => createStepperItem(item, { priceOnly: true })));
+      document.getElementById("rhinestoneItems").replaceChildren(...rhinestoneItems.map((item) => createStepperItem(item, { priceOnly: true })));
+      document.getElementById("extensionItems").replaceChildren(...extensionItems.map((item) => createStepperItem(item, { compact: true })));
+      const careBaseRow = document.createElement("div");
+      careBaseRow.className = "inline-choice-row";
+      careBaseRow.replaceChildren(...careBaseItems.map((item) => createCheckboxItem(item, { compact: true })));
+      document.getElementById("careRemovalItems").replaceChildren(careBaseRow, ...careRemovalItems.map(createCheckboxItem));
+    }
+
+    function allQuantityItems() {
+      return [...addonItems, ...artItems, ...rhinestoneItems, ...extensionItems];
+    }
+
+    function selectedLines() {
+      const lines = [];
+
+      for (const item of baseItems) {
+        if (state.base[item.id]) {
+          lines.push({ label: item.name, detail: "", amount: item.price });
+        }
+      }
+
+      for (const item of [...careBaseItems, ...careRemovalItems]) {
+        if (state.selected[item.id]) {
+          lines.push({ label: item.name, detail: "", amount: item.price });
+        }
+      }
+
+      if (state.customAmount > 0) {
+        lines.push({ label: "其他", detail: "", amount: state.customAmount });
+      }
+
+      for (const item of allQuantityItems()) {
+        const count = Number(state.quantity[item.id] || 0);
+        if (count > 0) {
+          lines.push({
+            label: item.name,
+            detail: `${formatMoney(item.price)} x ${count}`,
+            amount: item.price * count,
+          });
+        }
+      }
+
+      return lines;
+    }
+
+    function buildMessage(lines, total, note) {
+      const body = lines.length
+        ? lines.map((line) => {
+            const detail = line.detail ? `（${line.detail}）` : "";
+            return `${line.label}${detail}：${formatMoney(line.amount)}`;
+          }).join("\n")
+        : "尚未選擇項目";
+
+      const customerNote = note.trim() ? `\n\n${note.trim()}` : "";
+      return `今天的明細這邊喔～～\n\n${body}\n\n合計：${formatMoney(total)}${customerNote}`;
+    }
+
+    function updateSummary() {
+      const lines = selectedLines();
+      const total = lines.reduce((sum, line) => sum + line.amount, 0);
+      const lineItems = document.getElementById("lineItems");
+
+      document.getElementById("totalValue").textContent = formatMoney(total);
+      document.getElementById("dockTotalValue").textContent = formatMoney(total);
+
+      if (!lines.length) {
+        lineItems.innerHTML = `<div class="empty">點選項目後會出現明細</div>`;
+      } else {
+        lineItems.replaceChildren(...lines.map((line) => {
+          const row = document.createElement("div");
+          row.className = "line-item";
+          const detail = line.detail ? ` ${line.detail}` : "";
+          row.innerHTML = `<span>${line.label}<small>${detail}</small></span><strong>${formatMoney(line.amount)}</strong>`;
+          return row;
+        }));
+      }
+
+      document.getElementById("messageText").value = buildMessage(lines, total, state.note);
+    }
+
+    function setToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      window.clearTimeout(setToast.timer);
+      setToast.timer = window.setTimeout(() => {
+        toast.textContent = "";
+      }, 2200);
+    }
+
+    async function copyMessage() {
+      const message = document.getElementById("messageText").value;
+      try {
+        await navigator.clipboard.writeText(message);
+        setToast("已複製，可以貼給客人或貼回 Notion。");
+      } catch {
+        document.getElementById("messageText").select();
+        document.execCommand("copy");
+        setToast("已選取明細文字，可以手動複製。");
+      }
+    }
+
+    function resetAll() {
+      state.base = {};
+      state.selected = {};
+      state.quantity = {};
+      state.customAmount = 0;
+      state.note = "";
+      document.querySelectorAll("[data-base-id]").forEach((input) => {
+        input.checked = false;
+      });
+      document.querySelectorAll("[data-checkbox-id]").forEach((input) => {
+        input.checked = false;
+      });
+      document.querySelectorAll("[data-quantity-id]").forEach((input) => {
+        input.value = "0";
+      });
+      document.getElementById("customAmount").value = "";
+      document.getElementById("nailNote").value = "";
+      updateSummary();
+    }
+
+    function bindEvents() {
+      document.addEventListener("change", (event) => {
+        const baseId = event.target.dataset.baseId;
+        if (baseId) {
+          state.base[baseId] = event.target.checked;
+          updateSummary();
+        }
+
+        const checkboxId = event.target.dataset.checkboxId;
+        if (checkboxId) {
+          state.selected[checkboxId] = event.target.checked;
+          updateSummary();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        const itemId = event.target.dataset.itemId;
+        const step = Number(event.target.dataset.step || 0);
+        if (!itemId || !step) return;
+
+        const current = Number(state.quantity[itemId] || 0);
+        const next = Math.max(0, current + step);
+        state.quantity[itemId] = next;
+        const input = document.querySelector(`[data-quantity-id="${itemId}"]`);
+        if (input) input.value = String(next);
+        updateSummary();
+      });
+
+      document.addEventListener("input", (event) => {
+        const quantityId = event.target.dataset.quantityId;
+        if (quantityId) {
+          const value = Math.max(0, Number.parseInt(event.target.value || "0", 10) || 0);
+          state.quantity[quantityId] = value;
+          event.target.value = String(value);
+          updateSummary();
+        }
+      });
+
+      document.getElementById("nailNote").addEventListener("input", (event) => {
+        state.note = event.target.value;
+        updateSummary();
+      });
+
+      document.getElementById("customAmount").addEventListener("input", (event) => {
+        state.customAmount = Math.max(0, Number.parseInt(event.target.value.replace(/[^\d]/g, "") || "0", 10) || 0);
+        updateSummary();
+      });
+
+      document.getElementById("copyButton").addEventListener("click", copyMessage);
+      document.getElementById("copyButtonBottom").addEventListener("click", copyMessage);
+      document.getElementById("copyButtonDock").addEventListener("click", copyMessage);
+      document.getElementById("resetButton").addEventListener("click", resetAll);
+    }
+
+    renderControls();
+    bindEvents();
+    updateSummary();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./pricing-calculator-sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
