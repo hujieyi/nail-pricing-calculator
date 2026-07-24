@@ -662,13 +662,33 @@
 
       #artItems .item.price-only,
       #rhinestoneItems .item.price-only {
-        grid-template-columns: minmax(0, 1fr) 94px;
-        gap: 6px;
+        grid-template-columns: minmax(0, 1fr) 84px;
+        gap: 4px;
+        padding: 8px;
+      }
+
+      #artItems .item-name,
+      #rhinestoneItems .item-name {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      #artItems .unit-price-control,
+      #rhinestoneItems .unit-price-control {
+        width: 100%;
+        gap: 2px;
+      }
+
+      #artItems .unit-price-input,
+      #rhinestoneItems .unit-price-input {
+        width: 100%;
+        padding-left: 2px;
+        padding-right: 2px;
       }
 
       #artItems .stepper,
       #rhinestoneItems .stepper {
-        grid-template-columns: 34px minmax(26px, 1fr) 34px;
+        grid-template-columns: 28px minmax(28px, 1fr) 28px;
+        width: 100%;
       }
 
       #extensionItems {
@@ -949,7 +969,7 @@
       row.className = options.priceOnly ? "item price-only" : options.compact ? "item compact" : "item";
       row.dataset.controlItemId = item.id;
       const nameMarkup = item.editablePrice
-        ? `<label class="unit-price-control">單價 $<input class="unit-price-input" inputmode="numeric" pattern="[0-9]*" value="${item.price}" data-unit-price-id="${item.id}" aria-label="${item.name}單價"></label>`
+        ? `<label class="unit-price-control">$<input class="unit-price-input" inputmode="numeric" pattern="[0-9]*" value="${item.price}" data-unit-price-id="${item.id}" aria-label="${item.name}單價"></label>`
         : options.priceOnly
         ? `<span class="item-price">單價 ${formatMoney(item.price)}</span>`
         : options.compact
