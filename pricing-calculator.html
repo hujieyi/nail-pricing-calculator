@@ -1006,7 +1006,7 @@
       const otherCareRemovalItems = careRemovalItems.filter((item) => !noContinueIds.has(item.id));
       const otherContinueItem = otherCareRemovalItems.find((item) => item.id === "other-removal-continue");
       const addonCareItems = otherCareRemovalItems.filter((item) => item.id !== "other-removal-continue");
-      const pairedAddonIds = new Set(["addon-foot-deep-1400", "addon-foot-deep-1800"]);
+      const pairedAddonIds = new Set(["addon-heel-care", "addon-foot-deep-1400"]);
       const addonTopRow = document.createElement("div");
       addonTopRow.className = "inline-choice-row";
       addonTopRow.replaceChildren(
