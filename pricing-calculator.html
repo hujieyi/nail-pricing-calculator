@@ -814,7 +814,6 @@
       <div class="actions">
         <button class="button" id="resetButton" type="button">清空</button>
         <button class="button primary" id="copyButton" type="button">複製給客人</button>
-        <button class="button notion" id="copyNotionButton" type="button">存到 Notion</button>
       </div>
     </div>
 
@@ -902,13 +901,12 @@
             <textarea id="messageText" readonly></textarea>
           </div>
           <button class="button primary" id="copyButtonBottom" type="button">複製給客人</button>
-          <button class="button notion" id="copyNotionButtonBottom" type="button">存到 Notion</button>
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
       </aside>
     </div>
 
-    <p class="footer-note">選好當天客人後按「存到 Notion」，明細會加在施作頁面最下方，並同步更新總額。</p>
+    <p class="footer-note">選好當天客人後按「複製給客人」，明細會同時加在施作頁面最下方，並同步更新 Notion 總額。</p>
   </main>
 
   <div class="mobile-dock" aria-label="手機快速操作列">
@@ -918,7 +916,6 @@
     </div>
     <div class="dock-actions">
       <button class="button primary" id="copyButtonDock" type="button">複製給客人</button>
-      <button class="button notion" id="copyNotionButtonDock" type="button">存到 Notion</button>
     </div>
   </div>
 
@@ -1288,7 +1285,7 @@
       }
     }
 
-    async function saveToNotion() {
+    async function saveToNotion({ skipConfirm = false } = {}) {
       const lines = selectedLines();
       const total = lines.reduce((sum, line) => sum + line.amount, 0);
       const select = document.getElementById("appointmentSelect");
@@ -1303,18 +1300,18 @@
         setToast("請先選擇計價項目。");
         return;
       }
-      if (!window.confirm(`確定存到 ${customerName} 的當天施作頁面？\n合計：${formatMoney(total)}`)) {
+      if (!skipConfirm && !window.confirm(`確定存到 ${customerName} 的當天施作頁面？\n合計：${formatMoney(total)}`)) {
         return;
       }
 
       const buttons = [
-        "copyNotionButton",
-        "copyNotionButtonBottom",
-        "copyNotionButtonDock",
+        "copyButton",
+        "copyButtonBottom",
+        "copyButtonDock",
       ].map((id) => document.getElementById(id));
       buttons.forEach((button) => {
         button.disabled = true;
-        button.textContent = "寫入中…";
+        button.textContent = "存入 Notion…";
       });
       try {
         const result = await apiRequest(`/api/appointments/${pageId}/charge`, {
@@ -1329,9 +1326,14 @@
       } finally {
         buttons.forEach((button) => {
           button.disabled = false;
-          button.textContent = "存到 Notion";
+          button.textContent = "複製給客人";
         });
       }
+    }
+
+    async function copyAndSave() {
+      await copyMessage();
+      await saveToNotion({ skipConfirm: true });
     }
 
     function resetAll() {
@@ -1414,12 +1416,9 @@
         updateSummary();
       });
 
-      document.getElementById("copyButton").addEventListener("click", copyMessage);
-      document.getElementById("copyButtonBottom").addEventListener("click", copyMessage);
-      document.getElementById("copyButtonDock").addEventListener("click", copyMessage);
-      document.getElementById("copyNotionButton").addEventListener("click", saveToNotion);
-      document.getElementById("copyNotionButtonBottom").addEventListener("click", saveToNotion);
-      document.getElementById("copyNotionButtonDock").addEventListener("click", saveToNotion);
+      document.getElementById("copyButton").addEventListener("click", copyAndSave);
+      document.getElementById("copyButtonBottom").addEventListener("click", copyAndSave);
+      document.getElementById("copyButtonDock").addEventListener("click", copyAndSave);
       document.getElementById("loadAppointmentsButton").addEventListener("click", loadAppointments);
       document.getElementById("appointmentDate").addEventListener("change", () => {
         if (document.getElementById("notionAccessKey").value.trim()) loadAppointments();
