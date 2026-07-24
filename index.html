@@ -404,8 +404,9 @@
       color: var(--text);
       text-align: left;
       cursor: pointer;
-      display: grid;
-      gap: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .appointment-card strong {
@@ -1144,6 +1145,7 @@
     function setConnectionStatus(message, ready = false) {
       const status = document.getElementById("connectionStatus");
       status.textContent = message;
+      status.hidden = !message;
       status.classList.toggle("ready", ready);
     }
 
@@ -1224,7 +1226,7 @@
         if (appointments.length === 1) {
           select.value = appointments[0].pageId;
           options.querySelector(".appointment-card")?.classList.add("selected");
-          setConnectionStatus(`今天是 ${appointments[0].customerName}，已自動選好。`, true);
+          setConnectionStatus("");
         } else {
           setConnectionStatus(`今天有 ${appointments.length} 位客人，請點選這次的客人。`, true);
         }
