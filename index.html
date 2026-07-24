@@ -536,19 +536,39 @@
       }
 
       .topbar {
-        align-items: stretch;
-        flex-direction: column;
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
+        margin: 0 0 12px;
+        padding: 10px 11px;
+        background: rgba(247, 244, 239, 0.96);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(72, 55, 36, 0.12);
+        backdrop-filter: blur(12px);
+      }
+
+      .topbar > div:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .topbar h1 {
+        margin: 0;
+        font-size: 24px;
       }
 
       .actions {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        justify-content: stretch;
+        display: flex;
+        flex: 0 0 auto;
       }
 
       .actions .button {
-        min-width: 0;
-        width: 100%;
+        min-width: 68px;
+        width: auto;
       }
 
       #copyButton,

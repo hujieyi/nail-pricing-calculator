@@ -1,4 +1,4 @@
-const CACHE_NAME = "nail-pricing-v22";
+const CACHE_NAME = "nail-pricing-v23";
 const ASSETS = [
   "./pricing-calculator.html",
   "./pricing-calculator.webmanifest",
