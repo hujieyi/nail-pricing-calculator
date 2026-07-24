@@ -842,6 +842,26 @@
 
   <script>
     const NOTION_API_BASE = "https://nail-crm-pricing-backend.pages.dev";
+    const ACCESS_KEY_STORAGE = "nailCrmAccessKey";
+    const ACCESS_KEY_COOKIE = "nail_crm_access_key";
+
+    function saveAccessKey(accessKey) {
+      if (!accessKey) return;
+      localStorage.setItem(ACCESS_KEY_STORAGE, accessKey);
+      document.cookie = `${ACCESS_KEY_COOKIE}=${encodeURIComponent(accessKey)}; Max-Age=31536000; Path=/; Secure; SameSite=Strict`;
+    }
+
+    function savedAccessKey() {
+      const localValue = localStorage.getItem(ACCESS_KEY_STORAGE);
+      if (localValue) return localValue;
+
+      const cookie = document.cookie
+        .split("; ")
+        .find((item) => item.startsWith(`${ACCESS_KEY_COOKIE}=`));
+      const cookieValue = cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "";
+      if (cookieValue) localStorage.setItem(ACCESS_KEY_STORAGE, cookieValue);
+      return cookieValue;
+    }
 
     const baseItems = [
       { id: "clear-builder", name: "透明建構", price: 800 },
@@ -1157,7 +1177,7 @@
           options.append(card);
         }
         select.disabled = false;
-        localStorage.setItem("nailCrmAccessKey", accessKey);
+        saveAccessKey(accessKey);
         if (appointments.length === 1) {
           select.value = appointments[0].pageId;
           options.querySelector(".appointment-card")?.classList.add("selected");
@@ -1332,7 +1352,7 @@
       month: "2-digit",
       day: "2-digit",
     }).format(new Date());
-    document.getElementById("notionAccessKey").value = localStorage.getItem("nailCrmAccessKey") || "";
+    document.getElementById("notionAccessKey").value = savedAccessKey();
     updateSummary();
     if (document.getElementById("notionAccessKey").value) loadAppointments();
 
