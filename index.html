@@ -388,6 +388,41 @@
       font-weight: 700;
     }
 
+    .appointment-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .appointment-card {
+      width: 100%;
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      gap: 2px;
+    }
+
+    .appointment-card strong {
+      font-size: 17px;
+    }
+
+    .appointment-card small {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .appointment-card.selected {
+      border-color: var(--accent);
+      background: rgba(53, 111, 103, 0.09);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
     .choice input {
       width: 20px;
       height: 20px;
@@ -710,9 +745,12 @@
               <input class="field" id="notionAccessKey" type="password" autocomplete="current-password" placeholder="App 存取碼" aria-label="App 存取碼">
               <button class="button notion" id="loadAppointmentsButton" type="button">載入客人</button>
             </div>
-            <select class="field" id="appointmentSelect" aria-label="選擇當天施作客人" disabled>
+            <select id="appointmentSelect" aria-label="選擇當天施作客人" hidden disabled>
               <option value="">請先載入當天客人</option>
             </select>
+            <div class="appointment-options" id="appointmentOptions" aria-label="當天客人">
+              <div class="empty">正在準備今天的客人…</div>
+            </div>
             <div class="connection-status" id="connectionStatus">Notion 安全後台部署完成後即可使用。</div>
           </div>
         </section>
@@ -1079,11 +1117,14 @@
       try {
         const data = await apiRequest(`/api/appointments?date=${encodeURIComponent(date)}`);
         const select = document.getElementById("appointmentSelect");
+        const options = document.getElementById("appointmentOptions");
         const appointments = data.appointments || [];
         select.replaceChildren();
+        options.replaceChildren();
         if (!appointments.length) {
           select.append(new Option("這天沒有找到施作頁面", ""));
           select.disabled = true;
+          options.innerHTML = `<div class="empty">這天沒有預約客人</div>`;
           setConnectionStatus("這天沒有找到施作頁面，請換日期或先到 Notion 建立預約。");
           return;
         }
@@ -1096,10 +1137,34 @@
           );
           option.dataset.customerName = appointment.customerName;
           select.append(option);
+
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "appointment-card";
+          card.dataset.pageId = appointment.pageId;
+          const customerLabel = document.createElement("strong");
+          customerLabel.textContent = appointment.customerName;
+          const appointmentLabel = document.createElement("small");
+          appointmentLabel.textContent = appointment.appointmentTitle;
+          card.append(customerLabel, appointmentLabel);
+          card.addEventListener("click", () => {
+            select.value = appointment.pageId;
+            options.querySelectorAll(".appointment-card").forEach((item) => {
+              item.classList.toggle("selected", item === card);
+            });
+            setConnectionStatus(`已選擇 ${appointment.customerName}。`, true);
+          });
+          options.append(card);
         }
         select.disabled = false;
         localStorage.setItem("nailCrmAccessKey", accessKey);
-        setConnectionStatus(`找到 ${appointments.length} 筆，請選擇這次的客人。`, true);
+        if (appointments.length === 1) {
+          select.value = appointments[0].pageId;
+          options.querySelector(".appointment-card")?.classList.add("selected");
+          setConnectionStatus(`今天是 ${appointments[0].customerName}，已自動選好。`, true);
+        } else {
+          setConnectionStatus(`今天有 ${appointments.length} 位客人，請點選這次的客人。`, true);
+        }
       } catch (error) {
         setConnectionStatus(error.message);
       } finally {
@@ -1253,6 +1318,9 @@
       document.getElementById("copyNotionButtonBottom").addEventListener("click", saveToNotion);
       document.getElementById("copyNotionButtonDock").addEventListener("click", saveToNotion);
       document.getElementById("loadAppointmentsButton").addEventListener("click", loadAppointments);
+      document.getElementById("appointmentDate").addEventListener("change", () => {
+        if (document.getElementById("notionAccessKey").value.trim()) loadAppointments();
+      });
       document.getElementById("resetButton").addEventListener("click", resetAll);
     }
 
@@ -1266,6 +1334,7 @@
     }).format(new Date());
     document.getElementById("notionAccessKey").value = localStorage.getItem("nailCrmAccessKey") || "";
     updateSummary();
+    if (document.getElementById("notionAccessKey").value) loadAppointments();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
