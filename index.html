@@ -154,6 +154,14 @@
       letter-spacing: 0;
     }
 
+    .title-price-hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 5px;
+      white-space: normal;
+    }
+
     .hint {
       color: var(--muted);
       font-size: 13px;
@@ -226,6 +234,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      width: 100%;
       color: var(--muted);
       font-size: 15px;
       font-weight: 700;
@@ -233,7 +242,8 @@
     }
 
     .unit-price-input {
-      width: 58px;
+      flex: 1;
+      width: 72px;
       min-width: 0;
       border: 1px solid var(--line);
       border-radius: 7px;
@@ -569,11 +579,80 @@
     }
 
     @media (max-width: 560px) {
-      .choice-row,
-      .inline-choice-row,
       .item,
       .notion-connect-row {
         grid-template-columns: 1fr;
+      }
+
+      .inline-choice-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .choice-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .choice-row .choice {
+        gap: 8px;
+        min-height: 64px;
+        padding: 10px;
+      }
+
+      .choice-row .choice-text {
+        display: grid;
+        gap: 1px;
+      }
+
+      #addonItems {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      #addonItems .item.compact {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      #addonItems .stepper {
+        grid-template-columns: 36px minmax(30px, 1fr) 36px;
+      }
+
+      #artItems,
+      #rhinestoneItems {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      #artItems .item.price-only,
+      #rhinestoneItems .item.price-only {
+        grid-template-columns: minmax(0, 1fr) 94px;
+        gap: 6px;
+      }
+
+      #artItems .stepper,
+      #rhinestoneItems .stepper {
+        grid-template-columns: 34px minmax(26px, 1fr) 34px;
+      }
+
+      #extensionItems {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      #extensionItems .item.compact {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      #extensionItems .stepper {
+        grid-template-columns: 36px minmax(30px, 1fr) 36px;
+      }
+
+      #extensionItems [data-control-item-id="repair"] {
+        grid-column: 1 / -1;
+        grid-template-columns: 112px minmax(0, 1fr);
       }
 
       .item.compact {
@@ -581,7 +660,7 @@
       }
 
       .item.price-only {
-        grid-template-columns: 74px minmax(0, 1fr);
+        grid-template-columns: minmax(128px, 0.36fr) minmax(0, 0.64fr);
       }
 
       .item-name {
@@ -648,16 +727,14 @@
 
         <section class="section">
           <div class="section-header">
-            <h2>彩繪/造型</h2>
-            <span class="hint">依難度級距</span>
+            <h2>彩繪/造型 <small class="title-price-hint">30・50・80・100・120・150・200・250</small></h2>
           </div>
           <div class="items" id="artItems"></div>
         </section>
 
         <section class="section">
           <div class="section-header">
-            <h2>排鑽/貼鑽</h2>
-            <span class="hint">依單顆 / 組合價格</span>
+            <h2>排鑽/貼鑽 <small class="title-price-hint">50・100・150・200・250・350</small></h2>
           </div>
           <div class="items" id="rhinestoneItems"></div>
         </section>
@@ -738,17 +815,18 @@
       { id: "cat-eye", name: "貓眼", price: 50 },
     ];
 
-    const artItems = [30, 50, 80, 120, 150].map((price) => ({
+    const artItems = [50, 100, 150, 250].map((price) => ({
       id: `art-${price}`,
       name: "彩繪/造型",
       price,
       editablePrice: true,
     }));
 
-    const rhinestoneItems = [100, 150, 200, 250, 350].map((price) => ({
+    const rhinestoneItems = [50, 200, 250, 350].map((price) => ({
       id: `rhinestone-${price}`,
       name: "排鑽/貼鑽",
       price,
+      editablePrice: true,
     }));
 
     const extensionItems = [
@@ -767,8 +845,8 @@
       { id: "removal-no-continue", name: "純卸不續作", price: 400 },
       { id: "other-removal-no-continue", name: "他店卸不續作", price: 500 },
       { id: "addon-heel-care", name: "加購-去後跟", price: 900 },
-      { id: "addon-foot-deep-1400", name: "加購-足深層", price: 1400 },
-      { id: "addon-foot-deep-1800", name: "加購-足深層", price: 1800 },
+      { id: "addon-foot-deep-1400", name: "加購-足輕保養", price: 1400 },
+      { id: "addon-foot-deep-1800", name: "加購-足深層修護", price: 1800 },
     ];
 
     const state = {
@@ -811,6 +889,7 @@
     function createStepperItem(item, options = {}) {
       const row = document.createElement("div");
       row.className = options.priceOnly ? "item price-only" : options.compact ? "item compact" : "item";
+      row.dataset.controlItemId = item.id;
       const nameMarkup = item.editablePrice
         ? `<label class="unit-price-control">單價 $<input class="unit-price-input" inputmode="numeric" pattern="[0-9]*" value="${item.price}" data-unit-price-id="${item.id}" aria-label="${item.name}單價"></label>`
         : options.priceOnly
@@ -840,7 +919,29 @@
       const careBaseRow = document.createElement("div");
       careBaseRow.className = "inline-choice-row";
       careBaseRow.replaceChildren(...careBaseItems.map((item) => createCheckboxItem(item, { compact: true })));
-      document.getElementById("careRemovalItems").replaceChildren(careBaseRow, ...careRemovalItems.map(createCheckboxItem));
+      const noContinueIds = new Set(["removal-no-continue", "other-removal-no-continue"]);
+      const noContinueRow = document.createElement("div");
+      noContinueRow.className = "inline-choice-row";
+      noContinueRow.replaceChildren(
+        ...careRemovalItems.filter((item) => noContinueIds.has(item.id)).map(createCheckboxItem),
+      );
+      const otherCareRemovalItems = careRemovalItems.filter((item) => !noContinueIds.has(item.id));
+      const otherContinueItem = otherCareRemovalItems.find((item) => item.id === "other-removal-continue");
+      const addonCareItems = otherCareRemovalItems.filter((item) => item.id !== "other-removal-continue");
+      const pairedAddonIds = new Set(["addon-foot-deep-1400", "addon-foot-deep-1800"]);
+      const addonTopRow = document.createElement("div");
+      addonTopRow.className = "inline-choice-row";
+      addonTopRow.replaceChildren(
+        ...addonCareItems.filter((item) => pairedAddonIds.has(item.id)).map(createCheckboxItem),
+      );
+      const remainingAddonItems = addonCareItems.filter((item) => !pairedAddonIds.has(item.id));
+      document.getElementById("careRemovalItems").replaceChildren(
+        careBaseRow,
+        createCheckboxItem(otherContinueItem),
+        noContinueRow,
+        ...remainingAddonItems.map(createCheckboxItem),
+        addonTopRow,
+      );
     }
 
     function allQuantityItems() {
