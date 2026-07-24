@@ -619,6 +619,14 @@
         grid-template-columns: 1fr;
       }
 
+      .notion-connect-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #loadAppointmentsButton {
+        grid-column: 1 / -1;
+      }
+
       .inline-choice-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
@@ -743,7 +751,6 @@
     <div class="topbar">
       <div>
         <h1>美甲計價明細</h1>
-        <p class="subtitle">點選項目與數量，自動加總，產生可傳給客人的收費明細。</p>
       </div>
       <div class="actions">
         <button class="button" id="resetButton" type="button">清空</button>
@@ -755,10 +762,6 @@
     <div class="layout">
       <div class="panel" aria-label="計價項目">
         <section class="section">
-          <div class="section-header">
-            <h2>存到客人施作頁面</h2>
-            <span class="hint">先選日期與客人</span>
-          </div>
           <div class="notion-connect">
             <div class="notion-connect-row">
               <input class="field" id="appointmentDate" type="date" aria-label="施作日期">
