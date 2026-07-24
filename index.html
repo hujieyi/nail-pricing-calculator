@@ -727,14 +727,14 @@
 
       #extensionItems .item.compact {
         grid-template-columns: auto minmax(0, 1fr);
-        gap: 4px;
+        gap: 0;
         padding: 0;
         border: 0;
         background: transparent;
       }
 
       #extensionItems .stepper {
-        grid-template-columns: 28px minmax(28px, 1fr) 28px;
+        grid-template-columns: 26px minmax(26px, 1fr) 26px;
         width: 100%;
         min-width: 0;
       }
@@ -752,6 +752,7 @@
       #extensionItems [data-control-item-id="extension-120"] {
         grid-column: 1 / -1;
         grid-template-columns: 112px minmax(0, 1fr);
+        gap: 4px;
         padding: 8px;
         border: 1px solid rgba(221, 214, 204, 0.8);
         background: var(--surface-strong);
