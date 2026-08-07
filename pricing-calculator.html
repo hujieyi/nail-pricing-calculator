@@ -327,7 +327,7 @@
 
     .custom-item {
       display: grid;
-      grid-template-columns: 82px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 12px;
       align-items: center;
       background: var(--surface-strong);
@@ -337,10 +337,16 @@
       margin-top: 8px;
     }
 
-    .custom-label {
-      font-size: 17px;
+    .custom-name-input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 16px;
       font-weight: 800;
-      white-space: nowrap;
+      color: var(--text);
+      background: #fff;
     }
 
     .custom-input {
@@ -869,7 +875,7 @@
         <section class="section">
           <div class="items" id="careRemovalItems"></div>
           <div class="custom-item">
-            <span class="custom-label">其他</span>
+            <input class="custom-name-input" id="customName" type="text" value="其他" placeholder="輸入項目名稱" aria-label="其他項目名稱">
             <input class="custom-input" id="customAmount" inputmode="numeric" pattern="[0-9]*" placeholder="$0" aria-label="其他金額">
           </div>
         </section>
@@ -897,8 +903,9 @@
           <div>
             <div class="section-header">
               <h2>給客人的文字</h2>
+              <span class="hint">可直接修改</span>
             </div>
-            <textarea id="messageText" readonly></textarea>
+            <textarea id="messageText" aria-label="給客人的文字"></textarea>
           </div>
           <button class="button primary" id="copyButtonBottom" type="button">複製給客人</button>
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -991,6 +998,7 @@
       selected: {},
       quantity: {},
       unitPrice: {},
+      customName: "其他",
       customAmount: 0,
       note: "",
     };
@@ -1101,7 +1109,7 @@
       }
 
       if (state.customAmount > 0) {
-        lines.push({ label: "其他", detail: "", amount: state.customAmount });
+        lines.push({ label: state.customName.trim() || "其他", detail: "", amount: state.customAmount });
       }
 
       for (const item of allQuantityItems()) {
@@ -1341,6 +1349,7 @@
       state.selected = {};
       state.quantity = {};
       state.unitPrice = {};
+      state.customName = "其他";
       state.customAmount = 0;
       state.note = "";
       document.querySelectorAll("[data-base-id]").forEach((input) => {
@@ -1356,6 +1365,7 @@
         const item = allQuantityItems().find((candidate) => candidate.id === input.dataset.unitPriceId);
         input.value = String(item?.price ?? 0);
       });
+      document.getElementById("customName").value = "其他";
       document.getElementById("customAmount").value = "";
       document.getElementById("nailNote").value = "";
       updateSummary();
@@ -1413,6 +1423,11 @@
 
       document.getElementById("customAmount").addEventListener("input", (event) => {
         state.customAmount = Math.max(0, Number.parseInt(event.target.value.replace(/[^\d]/g, "") || "0", 10) || 0);
+        updateSummary();
+      });
+
+      document.getElementById("customName").addEventListener("input", (event) => {
+        state.customName = event.target.value;
         updateSummary();
       });
 
